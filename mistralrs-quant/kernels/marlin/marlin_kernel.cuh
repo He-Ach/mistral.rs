@@ -21,6 +21,11 @@
 #include <cuda.h>
 #include <cuda_fp16.h>
 #include <iostream>
+// std::to_string and std::runtime_error are used below. libstdc++ drags both in
+// through <iostream>, so this compiles on Linux by accident; MSVC's <iostream> does
+// not, and every use fails with 'namespace "std" has no member "to_string"'.
+#include <stdexcept>
+#include <string>
 using namespace marlin;
 
 // m16n8k16 tensor core mma instruction with fp16/bf16 inputs and fp32
