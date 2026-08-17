@@ -50,6 +50,12 @@ fn main() {
         // CUDA 13.x CCCL headers require MSVC's conforming preprocessor.
         if target.contains("msvc") {
             builder = builder.arg("--compiler-options").arg("/Zc:preprocessor");
+            // rustc links the dynamic CRT on windows-msvc and nvcc defaults to the static
+            // one, so without this the crate's own objects cannot link against its kernels:
+            //   rust-lld: /failifmismatch: mismatch detected for 'RuntimeLibrary'
+            // A property of the target, not a user preference, so it does not belong in
+            // everyone's CUDA_NVCC_FLAGS.
+            builder = builder.arg("--compiler-options").arg("/MD");
         }
 
         // https://github.com/EricLBuehler/mistral.rs/issues/588

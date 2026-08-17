@@ -183,6 +183,14 @@ fn main() -> Result<(), String> {
         // CUDA 13.x CCCL headers require MSVC's conforming preprocessor.
         if target.contains("msvc") {
             builder = builder.arg("--compiler-options").arg("/Zc:preprocessor");
+            // rustc links the dynamic CRT on windows-msvc and nvcc defaults to the static
+            // one, so without this the two halves of the crate cannot be linked together:
+            //   rust-lld: /failifmismatch: mismatch detected for 'RuntimeLibrary'
+            //     mimalloc-static.o has value MD_DynamicRelease
+            //     moe_gemv.o       has value MT_StaticRelease
+            // This is a property of the target rather than a user preference, which is why
+            // it belongs here instead of in everyone's CUDA_NVCC_FLAGS.
+            builder = builder.arg("--compiler-options").arg("/MD");
         }
 
         // https://github.com/EricLBuehler/mistral.rs/issues/588
